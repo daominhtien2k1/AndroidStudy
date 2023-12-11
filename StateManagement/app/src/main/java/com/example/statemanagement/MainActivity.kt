@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
             myViewModel.event(MyViewModel.MyViewModelEvent.GetOtherData)
         }
 
-        myViewModel.myState.observe(this) { state ->
+        myViewModel.myDataState.observe(this) { state ->
             when (state.myData) {
                 is MyViewModel.ApiResult.Init -> {
                     activityMainBinding.loading.visibility = View.GONE
@@ -48,9 +48,9 @@ class MainActivity : AppCompatActivity() {
 
                 else -> {}
             }
+        }
 
-            // như thế này dù cập nhật lại myData thì cũng chạy lại otherData
-            // -> bị set lại textView2 và loading chưa kịp hiển thị visible thì đã set lại thành gone rồi
+        myViewModel.otherDataState.observe(this) { state ->
             when (state.otherData) {
                 is MyViewModel.ApiResult.Init -> {
                     activityMainBinding.loading.visibility = View.GONE
@@ -72,7 +72,6 @@ class MainActivity : AppCompatActivity() {
 
                 else -> {}
             }
-
         }
 
     }

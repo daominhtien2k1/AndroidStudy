@@ -7,12 +7,13 @@ import java.util.Timer
 import java.util.TimerTask
 
 class MyViewModel: ViewModel() {
-    private val _myState = MutableLiveData<MyViewModelState>(MyViewModelState())
-    val myState: LiveData<MyViewModelState>
-        get() = _myState
+    private val _myDataState = MutableLiveData<MyDataState>(MyDataState())
+    val myDataState: LiveData<MyDataState>
+        get() = _myDataState
 
-    private val currentState: MyViewModelState?
-        get() = _myState.value
+    private val _otherDataState = MutableLiveData<OtherDataState>(OtherDataState())
+    val otherDataState: LiveData<OtherDataState>
+        get() = _otherDataState
 
     sealed class ApiResult<out T> {
         object Init: ApiResult<Nothing>()
@@ -21,9 +22,12 @@ class MyViewModel: ViewModel() {
         data class Error(val message: String): ApiResult<Nothing>()
     }
 
-    // Cách tiếp cận đầu tiên cho multiple data
-    data class MyViewModelState(
+    // Cách tiếp cận thứ hai cho multiple data
+    data class MyDataState(
         val myData: ApiResult<String> = ApiResult.Init,
+    ): ViewState()
+
+    data class OtherDataState(
         val otherData: ApiResult<Int> = ApiResult.Init
     ): ViewState()
 
@@ -46,23 +50,27 @@ class MyViewModel: ViewModel() {
     }
 
     private fun getMyData() {
-        _myState.postValue(currentState!!.copy(myData = ApiResult.Loading))
+        _myDataState.postValue(
+            MyDataState(
+                myData = ApiResult.Loading
+            )
+        )
         Timer().schedule(object : TimerTask() {
             override fun run() {
-                _myState.postValue(
-                    currentState!!.copy(myData = (ApiResult.Success("Call Api success")))
-                )
+                _myDataState.postValue(MyDataState(myData = ApiResult.Success("Call Api success")))
             }
         }, 1000)
     }
 
     private fun getOtherData() {
-        _myState.postValue(currentState!!.copy(otherData = ApiResult.Loading))
+        _otherDataState.postValue(
+            OtherDataState(
+                otherData = ApiResult.Loading
+            )
+        )
         Timer().schedule(object : TimerTask() {
             override fun run() {
-                _myState.postValue(
-                    currentState!!.copy(otherData = (ApiResult.Success(200)))
-                )
+                _otherDataState.postValue(OtherDataState(otherData = ApiResult.Success(200)))
             }
         }, 1000)
     }
