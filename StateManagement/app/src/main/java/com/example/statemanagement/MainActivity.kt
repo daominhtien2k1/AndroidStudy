@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.coroutineScope
 import com.example.statemanagement.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 
@@ -22,28 +22,27 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         activityMainBinding.floatingActionButton.setOnClickListener {
-            lifecycleScope.launch {
-                myViewModel.getMyData().collect { state ->
-                    when (state) {
+            lifecycle.coroutineScope.launch {
+                myViewModel.getRealData().collect { result ->
+                    when (result) {
                         is ApiResult.Init -> {
                             activityMainBinding.loading.visibility = View.GONE
                             activityMainBinding.textView.visibility = View.VISIBLE
                             activityMainBinding.textView.text = "Init"
                         }
-
                         is ApiResult.Loading -> {
                             activityMainBinding.loading.visibility = View.VISIBLE
                             activityMainBinding.textView.visibility = View.INVISIBLE
                         }
-
                         is ApiResult.Success -> {
                             activityMainBinding.loading.visibility = View.GONE
                             activityMainBinding.textView.visibility = View.VISIBLE
-                            activityMainBinding.textView.text = "Hello World!"
+                            activityMainBinding.textView.text = result.data
                         }
-
                         is ApiResult.Error -> {
-
+                            activityMainBinding.loading.visibility = View.GONE
+                            activityMainBinding.textView.visibility = View.VISIBLE
+                            activityMainBinding.textView.text = result.message
                         }
 
                         else -> {}
@@ -51,5 +50,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
     }
 }
