@@ -4,7 +4,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.example.statemanagement.databinding.ActivityMainBinding
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var activityMainBinding: ActivityMainBinding
@@ -20,59 +22,34 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         activityMainBinding.floatingActionButton.setOnClickListener {
-            myViewModel.event(MyViewModel.MyViewModelEvent.GetMyData)
-        }
-        activityMainBinding.floatingActionButton2.setOnClickListener {
-            myViewModel.event(MyViewModel.MyViewModelEvent.GetOtherData)
-        }
+            lifecycleScope.launch {
+                myViewModel.getMyData().collect { state ->
+                    when (state) {
+                        is ApiResult.Init -> {
+                            activityMainBinding.loading.visibility = View.GONE
+                            activityMainBinding.textView.visibility = View.VISIBLE
+                            activityMainBinding.textView.text = "Init"
+                        }
 
-        myViewModel.myDataState.observe(this) { state ->
-            when (state.myData) {
-                is MyViewModel.ApiResult.Init -> {
-                    activityMainBinding.loading.visibility = View.GONE
-                    activityMainBinding.textView.visibility = View.VISIBLE
-                    activityMainBinding.textView.text = "Init"
-                }
-                is MyViewModel.ApiResult.Loading -> {
-                    activityMainBinding.loading.visibility = View.VISIBLE
-                    activityMainBinding.textView.visibility = View.INVISIBLE
-                }
-                is MyViewModel.ApiResult.Success -> {
-                    activityMainBinding.loading.visibility = View.GONE
-                    activityMainBinding.textView.visibility = View.VISIBLE
-                    activityMainBinding.textView.text = "Hello World!"
-                }
-                is MyViewModel.ApiResult.Error -> {
+                        is ApiResult.Loading -> {
+                            activityMainBinding.loading.visibility = View.VISIBLE
+                            activityMainBinding.textView.visibility = View.INVISIBLE
+                        }
 
-                }
+                        is ApiResult.Success -> {
+                            activityMainBinding.loading.visibility = View.GONE
+                            activityMainBinding.textView.visibility = View.VISIBLE
+                            activityMainBinding.textView.text = "Hello World!"
+                        }
 
-                else -> {}
+                        is ApiResult.Error -> {
+
+                        }
+
+                        else -> {}
+                    }
+                }
             }
         }
-
-        myViewModel.otherDataState.observe(this) { state ->
-            when (state.otherData) {
-                is MyViewModel.ApiResult.Init -> {
-                    activityMainBinding.loading.visibility = View.GONE
-                    activityMainBinding.textView2.visibility = View.VISIBLE
-                    activityMainBinding.textView2.text = "Init 2"
-                }
-                is MyViewModel.ApiResult.Loading -> {
-                    activityMainBinding.loading.visibility = View.VISIBLE
-                    activityMainBinding.textView2.visibility = View.INVISIBLE
-                }
-                is MyViewModel.ApiResult.Success -> {
-                    activityMainBinding.loading.visibility = View.GONE
-                    activityMainBinding.textView2.visibility = View.VISIBLE
-                    activityMainBinding.textView2.text = "Hello World 2!"
-                }
-                is MyViewModel.ApiResult.Error -> {
-
-                }
-
-                else -> {}
-            }
-        }
-
     }
 }
