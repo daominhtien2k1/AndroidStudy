@@ -8,7 +8,10 @@ import com.example.mvvmtodo.data.PreferencesManager
 import com.example.mvvmtodo.data.Task
 import com.example.mvvmtodo.data.TaskDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
@@ -20,11 +23,18 @@ class TasksViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
+    sealed class TasksEvent {
+        data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
+    }
+
     val searchQuery = MutableStateFlow("")
 //    val sortOrder = MutableStateFlow(SortOrder.BY_DATE)
 //    val hideCompleted = MutableStateFlow(false)
 
     val preferencesFlow = preferencesManager.preferencesFlow
+
+    private val tasksEventFlow = MutableSharedFlow<TasksEvent>()
+    val tasksEvent = tasksEventFlow.asSharedFlow()
 
     private val tasksFlow = combine(
         searchQuery,
@@ -50,6 +60,15 @@ class TasksViewModel @Inject constructor(
 
     fun onTaskCheckedChanged(task: Task, isChecked: Boolean) = viewModelScope.launch {
         taskDao.update(task.copy(completed = isChecked))
+    }
+
+    fun onTaskSwiped(task: Task) = viewModelScope.launch {
+        taskDao.delete(task)
+        tasksEventFlow.emit(TasksEvent.ShowUndoDeleteTaskMessage(task))
+    }
+
+    fun onUndoDeleteClick(task: Task) = viewModelScope.launch {
+        taskDao.insert(task)
     }
 }
 
