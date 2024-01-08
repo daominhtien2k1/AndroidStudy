@@ -9,7 +9,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mvvmtodo.data.Task
 import com.example.mvvmtodo.databinding.ItemTaskBinding
 
-class TasksAdapter : ListAdapter<Task, TasksAdapter.TasksViewHolder>(DiffCallback()) {
+class TasksAdapter(private val listener: OnItemClickListener) : ListAdapter<Task, TasksAdapter.TasksViewHolder>(DiffCallback()) {
+    interface OnItemClickListener {
+        fun onItemClick(task: Task)
+        fun onCheckBoxClick(task: Task, isChecked: Boolean)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TasksViewHolder {
         val binding = ItemTaskBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return TasksViewHolder(binding)
@@ -20,7 +25,26 @@ class TasksAdapter : ListAdapter<Task, TasksAdapter.TasksViewHolder>(DiffCallbac
         holder.bind(currentItem)
     }
 
-    class TasksViewHolder(private val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class TasksViewHolder(private val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
+        init {
+            binding.apply {
+                root.setOnClickListener {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        // không sử dụng inner class mà dùng là class TasksViewHolder thì không truy cập được listener và getItem()
+                        val task = getItem(position)
+                        listener.onItemClick(task)
+                    }
+                }
+                checkBoxCompleted.setOnClickListener {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val task = getItem(position)
+                        listener.onCheckBoxClick(task, checkBoxCompleted.isChecked)
+                    }
+                }
+            }
+        }
 
         fun bind(task: Task) {
             binding.apply {
